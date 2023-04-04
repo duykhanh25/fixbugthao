@@ -15,13 +15,10 @@ class CouponController extends Controller
 {
     public function __construct(){
 
-        $this->middleware('permission:add coupon',['only'=> ['insert_coupon_code','insert_coupon']]);
-        
-        $this->middleware('permission:delete coupon',['only'=> ['delete_coupon']]);
-       $this->middleware('permission:list coupon',['only'=> ['list_coupon']]);
+
     }
      public function AuthLogin(){
-        
+
         if(Session::get('login_normal')){
 
             $admin_id = Session::get('admin_id');
@@ -32,15 +29,15 @@ class CouponController extends Controller
                 return Redirect::to('dashboard');
             }else{
                 return Redirect::to('admin')->send();
-            } 
-        
-       
+            }
+
+
     }
 
 	public function unset_coupon(){
 		$coupon = Session::get('coupon');
         if($coupon==true){
-          
+
             Session::forget('coupon');
             return redirect()->back()->with('message','Xóa mã khuyến mãi thành công');
         }
@@ -67,10 +64,11 @@ class CouponController extends Controller
     	$data = $request->all();
 
     	$coupon = new Coupon;
-
+        $startDate = Carbon::createFromFormat('d/m/Y', $data['coupon_date_start'])->format('Y-m-d H:i:s');
+        $endDate = Carbon::createFromFormat('d/m/Y', $data['coupon_date_end'])->format('Y-m-d H:i:s');
     	$coupon->coupon_name = $data['coupon_name'];
-        $coupon->coupon_date_start = $data['coupon_date_start'];
-        $coupon->coupon_date_end = $data['coupon_date_end'];
+        $coupon->coupon_date_start = $startDate;
+        $coupon->coupon_date_end = $endDate;
     	$coupon->coupon_number = $data['coupon_number'];
     	$coupon->coupon_code = $data['coupon_code'];
     	$coupon->coupon_time = $data['coupon_time'];

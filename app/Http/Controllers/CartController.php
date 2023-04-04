@@ -55,15 +55,14 @@ class CartController extends Controller
         echo $output;
     }
     public function check_coupon(Request $request){
-        $today = Carbon::now('Asia/Ho_Chi_Minh')->format('d/m/Y');
+        $today = Carbon::now('Asia/Ho_Chi_Minh')->format('Y-m-d ');
         $data = $request->all();
         if(Session::get('customer_id')){
-           $coupon = Coupon::where('coupon_code',$data['coupon'])->where('coupon_status',1)->where('coupon_date_end','>=',$today)->where('coupon_used','LIKE','%'.Session::get('customer_id').'%')->first();
+           $coupon = Coupon::where('coupon_code',$data['coupon'])->where('coupon_status',1)->whereDate('coupon_date_end','>=',$today)->where('coupon_used','LIKE','%'.Session::get('customer_id').'%')->first();
            if($coupon){
             return redirect()->back()->with('error','Mã giảm giá đã sử dụng,vui lòng nhập mã khác');
         }else{
-
-           $coupon_login = Coupon::where('coupon_code',$data['coupon'])->where('coupon_status',1)->where('coupon_date_end','>=',$today)->first();
+           $coupon_login = Coupon::where('coupon_code',$data['coupon'])->where('coupon_status',1)->whereDate('coupon_date_end','>=',$today)->first();
                 if($coupon_login){
                     $count_coupon = $coupon_login->count();
                     if($count_coupon>0){
@@ -99,7 +98,7 @@ class CartController extends Controller
         }
         //neu chua dang nhap
     }else{
-        $coupon = Coupon::where('coupon_code',$data['coupon'])->where('coupon_status',1)->where('coupon_date_end','>=',$today)->first();
+        $coupon = Coupon::where('coupon_code',$data['coupon'])->where('coupon_status',1)->whereDate('coupon_date_end','>=',$today)->first();
         if($coupon){
             $count_coupon = $coupon->count();
             if($count_coupon>0){

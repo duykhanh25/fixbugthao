@@ -581,8 +581,8 @@ CKEDITOR.replace('my-editor', options);
             element: 'chartBar',
             data: data,
             xkey: 'date',
-            ykeys: ['value'],
-            labels: ['Series A'],
+            ykeys: ['value','order_number'],
+            labels: ['Doanh thu', 'Số đơn hàng'],
             xLabelSkip: 0,
         });
         $('#btn-chart-filter').click(function(){

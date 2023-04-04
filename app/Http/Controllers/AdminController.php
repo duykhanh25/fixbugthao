@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Coupon;
+use App\OrderDetails;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
 use DB;
@@ -524,25 +526,39 @@ class AdminController extends Controller
     private function __getDataChart($startDate, $endDate)
     {
         $period              = CarbonPeriod::create($startDate, $endDate);
-        $statistic           = DB::table('tbl_order_details')
-                                 ->select('created_at', DB::raw('SUM(product_price * product_sales_quantity) AS total_revenue'))
-                                 ->groupBy('created_at')
-                                 ->get();
+        $statistic = DB::table('tbl_order_details')
+                           ->join('tbl_order', 'tbl_order_details.order_code', '=', 'tbl_order.order_code')
+                           ->where('tbl_order.order_status', '=', 2)
+                           ->whereBetween('tbl_order_details.created_at', [$startDate, $endDate])
+                           ->select('tbl_order_details.*')
+                           ->get();
         $statisticSaleOrders = [];
         foreach ($period as $key => $date) {
             foreach ($statistic as $item) {
                 if ($date->format('Y-m-d H:i:s') == $item->created_at) {
+                    $coupon_number = 0;
+                    if ($item->product_coupon != 'no'){
+                        $coupon = DB::table('tbl_coupon')->where('coupon_code', $item->product_coupon)->first();
+                        $coupon_number = $coupon->coupon_number / 100;
+                    }
+                    $feeShip = $item->product_feeship;
+                    $totalPrice = $item->product_price * $item->product_sales_quantity + $feeShip;
+                    $priceReduced = $totalPrice * $coupon_number;
+                    $price  = ($totalPrice - $priceReduced - $feeShip) + ($statisticSaleOrders[$key]['value'] ?? 0);
                     $statisticSaleOrders[$key]['date']  = $date->format('d/m');
-                    $statisticSaleOrders[$key]['value'] = number_format($item->total_revenue, 0, '.', '');
+                    $statisticSaleOrders[$key]['value'] = number_format($price, 0, '.', '');
+                    $statisticSaleOrders[$key]['order'][]= $item->order_code;
+                    $statisticSaleOrders[$key]['order_number']= count(array_unique($statisticSaleOrders[$key]['order']));
                 } else {
                     if ( ! isset($statisticSaleOrders[$key])) {
                         $statisticSaleOrders[$key]['date']  = $date->format('d/m');
                         $statisticSaleOrders[$key]['value'] = 0;
+                            $statisticSaleOrders[$key]['order_number']= 0;
                     }
                 }
+                unset($statisticSaleOrders[$key]['order']);
             }
         }
-
         return $statisticSaleOrders;
     }
 }
